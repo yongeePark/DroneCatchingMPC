@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_namespace" default="scout"/>
+  <group ns="$(arg robot_namespace)">
+    <node name="controller_node" pkg="my_mpc" type="controller_node" respawn="false" clear_params="true" output="screen">
+      <rosparam file="$(find my_mpc)/config/2d_platform.yaml" />
+    </node>
+  </group>
+
+</launch>

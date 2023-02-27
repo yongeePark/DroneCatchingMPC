@@ -1,0 +1,31 @@
+mass : 1.50
+roll_time_constant  : 1.414299
+pitch_time_constant : 1.474574
+roll_gain           : 0.968957
+pitch_gain          : 1.042292
+
+drag_coefficients : [0.03, 0.03, 0]
+
+q_position_x : 80
+q_position_y : 80
+q_position_z : 100
+
+q_velocity_x : 30
+q_velocity_y : 30
+q_velocity_z : 40
+
+q_attitude_pos : 30
+q_attitude_vel : 10
+
+r_command : [30, 30, 1]
+
+roll_limit : 40
+pitch_limit : 40
+yaw_rate_limit : 3
+thrust_min : 5
+thrust_max : 25
+
+k_yaw : 0.5
+
+thrust_to_throttle : 0.708
+throttle_limit : 0.95

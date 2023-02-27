@@ -1,0 +1,3 @@
+/home/usrg/catkin_ws/src/my_mpc/solver_made_from_cpp/build/CMakeFiles/rebuild_cache.dir
+/home/usrg/catkin_ws/src/my_mpc/solver_made_from_cpp/build/CMakeFiles/edit_cache.dir
+/home/usrg/catkin_ws/src/my_mpc/solver_made_from_cpp/build/CMakeFiles/../solver/nmpc_solver_setup.dir
