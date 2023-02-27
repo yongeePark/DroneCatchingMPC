@@ -44,6 +44,11 @@ int main( )
     OnlineData linear_drag_coefficient1;
     OnlineData linear_drag_coefficient2;
 
+    // enemy drone status
+    OnlineData target_1;
+    OnlineData target_2;
+    OnlineData target_3;
+
     
 
     // Non-linear drag
@@ -70,14 +75,12 @@ int main( )
 
     // Reference functions and weighting matrices:
     Function h;
-    h << position1 << position2 << position3;
-    h << velocity1 << velocity2 << velocity3;
-    h << roll      << pitch;
+    h << position1 - target_1 << position2 - target_2 << position3 - target_3;
     h << roll_ref  << pitch_ref << (cos(pitch)*cos(roll)*thrust - g);
 
     Function hN;
-    hN << position1 << position2 << position3;
-    hN << velocity1 << velocity2 << velocity3;
+    hN << position1 - target_1 << position2 - target_2 << position3 - target_3;
+    // hN << velocity1 << velocity2 << velocity3;
 
     // Provide defined weighting matrices:
     BMatrix W  = eye<bool>(h.getDim());

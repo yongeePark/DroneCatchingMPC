@@ -4,7 +4,7 @@
 # BUT THIS IS USING CS_SIMPLE!
 #
 cmake_minimum_required(VERSION 3.0.2)
-project(my_mpc)
+project(DroneCatchingMPC)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -109,8 +109,8 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_library(mympc
-  src/mympc.cc
+add_library(catching_mpc
+  src/catching_mpc.cc
   solver/qpoases/SRC/Bounds.cpp
   solver/qpoases/SRC/Constraints.cpp
   solver/qpoases/SRC/CyclingManager.cpp
@@ -128,22 +128,21 @@ add_library(mympc
   solver/acado_common.h
   )
 
-add_dependencies(mympc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-  target_link_libraries(mympc  ${catkin_LIBRARIES} ${lapacke_LIBRARIES}  )
+add_dependencies(catching_mpc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(catching_mpc  ${catkin_LIBRARIES} ${lapacke_LIBRARIES}  )
+target_include_directories(catching_mpc PUBLIC
+solver/
+solver/qpoases
+solver/qpoases/INCLUDE
+solver/qpoases/SRC
+)
 
-  target_include_directories(mympc PUBLIC
-  solver/
-	solver/qpoases
-	solver/qpoases/INCLUDE
-	solver/qpoases/SRC
-	)
-
-add_executable(controller_node
+add_executable(catching_mpc_controller
   src/controller_node.cpp
 )
 # add_dependencies(controller_node my_mpc_gencpp)
 #add_dependencies(controller_node my_mpc_generate_messages_cpp)
-target_link_libraries(controller_node mympc)
+target_link_libraries(catching_mpc_controller catching_mpc)
 
 # add
 ## Rename C++ executable without prefix
