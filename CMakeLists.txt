@@ -4,7 +4,7 @@
 # BUT THIS IS USING CS_SIMPLE!
 #
 cmake_minimum_required(VERSION 3.0.2)
-project(DroneCatchingMPC)
+project(drone_catching_mpc)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -138,19 +138,22 @@ solver/qpoases/SRC
 )
 
 add_executable(catching_mpc_controller
-  src/controller_node.cpp
+  src/catching_controller_node.cpp
 )
 # add_dependencies(controller_node my_mpc_gencpp)
 #add_dependencies(controller_node my_mpc_generate_messages_cpp)
 target_link_libraries(catching_mpc_controller catching_mpc)
 
-# add
-## Rename C++ executable without prefix
-## The above recommended prefix causes long target names, the following renames the
-## target back to the shorter version for ease of user use
-## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 
+
+
+# target controller
+# only for simulation
+add_executable(target_controller
+  src/target_controller.cpp
+)
+add_dependencies(target_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(target_controller  ${catkin_LIBRARIES})
 
 
 #############

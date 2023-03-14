@@ -37,7 +37,7 @@ using namespace std;
 ACADOvariables acadoVariables;
 ACADOworkspace acadoWorkspace;
 
-namespace mympc{
+namespace catching_mpc{
 
 lapack_logical select_lhp(const double *real, const double *imag)
 {
@@ -69,7 +69,7 @@ public:
   void setState(bool is_armed, bool is_offboard);
   void setGoal(const geometry_msgs::PoseStamped& pose);
   void setTrajectory(const trajectory_msgs::MultiDOFJointTrajectory& trajectory);
-  void setPointsFromTrajectory();
+  
 
   void calculateRollPitchYawrateThrustCommand(Eigen::Vector4d* ref_attitude_thrust);
   void getPredictedState(visualization_msgs::Marker& marker);

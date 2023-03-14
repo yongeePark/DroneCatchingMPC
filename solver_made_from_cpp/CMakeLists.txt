@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4)
-PROJECT(nmpc_solver)
+PROJECT(dronecatchingmpc_solver)
 
 # CMake module(s) path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")

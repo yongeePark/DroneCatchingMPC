@@ -1,12 +1,14 @@
 /*
+
+// Rate control
+
+
 State : 9  -  vel, angle, pos  
 Input : 3  -  roll, pitch, thrust
 OnlineData : 6 - roll tau,gain  pitch tau,gain, drag1,drag2
 h : 6 - pos(3), input(3)
 hn : 3 - pos
  */
-
-// attitude control
 
 #include <acado_code_generation.hpp>
 
@@ -37,8 +39,8 @@ int main( )
     DifferentialState position2; //y_w
     DifferentialState position3; //z_w
 
-    Control roll_ref;
-    Control pitch_ref;
+    Control rollrate_ref;
+    Control pitchrate_ref;
     Control thrust;
 
     OnlineData roll_tau;
@@ -63,8 +65,8 @@ int main( )
     f << dot(velocity1)   == ((cos(roll)*cos(yaw)*sin(pitch) + sin(roll)*sin(yaw))*thrust - dragacc1);
     f << dot(velocity2)   == ((cos(roll)*sin(pitch)*sin(yaw) - cos(yaw)*sin(roll))*thrust - dragacc2);
     f << dot(velocity3)   == (-g + cos(pitch)*cos(roll)*thrust);
-    f << dot( roll )      == (roll_gain*roll_ref - roll)/roll_tau;
-    f << dot( pitch )     == (pitch_gain*pitch_ref - pitch)/pitch_tau;
+    f << dot( roll )      == rollrate_ref;
+    f << dot( pitch )     == pitchrate_ref;
     f << dot( yaw )       == 0;
     f << dot( position1 ) == velocity1;
     f << dot( position2 ) == velocity2;
@@ -77,7 +79,7 @@ int main( )
     h << velocity1  << velocity2  << velocity3;
     //
     h << roll      << pitch;
-    h << roll_ref  << pitch_ref << (cos(pitch)*cos(roll)*thrust - g);
+    h << rollrate_ref  << pitchrate_ref << (cos(pitch)*cos(roll)*thrust - g);
 
 
     Function hN;
@@ -98,8 +100,8 @@ int main( )
     ocp.minimizeLSQEndTerm(WN, hN);
 
     // Dummy constraints, real ones set online
-    ocp.subjectTo(-45*PI/180 <= roll_ref  <= 45*PI/180);
-    ocp.subjectTo(-45*PI/180 <= pitch_ref <= 45*PI/180);
+    ocp.subjectTo(-45*PI/180 <= rollrate_ref  <= 45*PI/180);
+    ocp.subjectTo(-45*PI/180 <= pitchrate_ref <= 45*PI/180);
     ocp.subjectTo(     g/2.0 <= thrust    <= g*1.5);
 
     // Export the code:

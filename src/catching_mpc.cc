@@ -1,12 +1,12 @@
-#include <my_mpc/mympc.h>
+#include <catching_mpc.h>
 
 
-namespace mympc {
+namespace catching_mpc {
   // constructor
   ModelPredictiveController::ModelPredictiveController(const ros::NodeHandle& nh, const ros::NodeHandle& nh_param) 
   :nh_(nh), nh_param_(nh_param), is_ready_(false)
   {
-    std::cout<<"[mympc.cc] iniitalizaing mpc controller"<<std::endl;
+    std::cout<<"[catching_mpc.cc] iniitalizaing mpc controller"<<std::endl;
     acado_initializeSolver();
     W_.setZero();
     WN_.setZero();
@@ -20,143 +20,6 @@ namespace mympc {
     velocity_ref_ << 0.0, 0.0, 0.0;
 
     initialized_parameters_ = setControllerParameters();
-    received_first_odometry_ = false;
-    received_trajectory_ = false;
-    finished_trajectory_ = false;
-    
-    std::cout<<"[mympc.cc] initialization is done"<<std::endl;
-  }
-
-  bool ModelPredictiveController::setControllerParameters()
-  {
-    std::cout<<"reading parameter"<<std::endl;
-
-    std::string nodename = "/scout/controller_node";
-    std::vector<double> drag_coefficients;
-    std::vector<double> r_command;
-    double q_position_x,q_position_y,q_position_z;
-    double q_velocity_x,q_velocity_y,q_velocity_z;
-    double q_attitude_pos, q_attitude_vel;
-    if (!nh_param_.getParam(nodename + "/mass",mass_))
-    {
-        std::cout<<"[Error] Please set [mass] parameter"<<std::endl;
-        return false;
-    }
-
-    if (!nh_param_.getParam(nodename + "/roll_time_constant",roll_time_constant_))
-    {
-        std::cout<<"[Error] Please set [roll_time_constant] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/pitch_time_constant",pitch_time_constant_))
-    {
-        std::cout<<"[Error] Please set [pitch_time_constant] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/roll_gain",roll_gain_))
-    {
-        std::cout<<"[Error] Please set [roll_gain] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/pitch_gain",pitch_gain_))
-    {
-        std::cout<<"[Error] Please set [pitch_gain] parameter"<<std::endl;
-        return false;
-    }
-
-    if (!nh_param_.getParam(nodename + "/drag_coefficients",drag_coefficients))
-    {
-        std::cout<<"[Error] Please set [drag_coefficients] parameter"<<std::endl;
-        return false;
-    }
-    drag_coefficients_ << drag_coefficients.at(0),drag_coefficients.at(1),drag_coefficients.at(2);
-
-    if (!nh_param_.getParam(nodename + "/q_position_x",q_position_x))
-    {
-        std::cout<<"[Error] Please set [q_position_x] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/q_position_y",q_position_y))
-    {
-        std::cout<<"[Error] Please set [q_position_Y] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/q_position_z",q_position_z))
-    {
-        std::cout<<"[Error] Please set [q_position_z] parameter"<<std::endl;
-        return false;
-    }
-    q_position_ << q_position_x,q_position_y,q_position_z;
-
-    if (!nh_param_.getParam(nodename + "/q_velocity_x",q_velocity_x))
-    {
-        std::cout<<"[Error] Please set [q_velocity_x] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/q_velocity_y",q_velocity_y))
-    {
-        std::cout<<"[Error] Please set [q_velocity_Y] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/q_velocity_z",q_velocity_z))
-    {
-        std::cout<<"[Error] Please set [q_velocity_z] parameter"<<std::endl;
-        return false;
-    }
-    q_velocity_ << q_velocity_x,q_velocity_y,q_velocity_z;
-
-    if (!nh_param_.getParam(nodename + "/q_attitude_pos",q_attitude_pos))
-    {
-        std::cout<<"[Error] Please set [q_attitude_pos] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/q_attitude_vel",q_attitude_vel))
-    {
-        std::cout<<"[Error] Please set [q_attitude_vel] parameter"<<std::endl;
-        return false;
-    }
-    q_attitude_ << q_attitude_pos,q_attitude_vel;
-    
-    if (!nh_param_.getParam(nodename + "/r_command",r_command))
-    {
-        std::cout<<"[Error] Please set [r_command] parameter"<<std::endl;
-        return false;
-    }
-    r_command_ << r_command.at(0), r_command.at(1),r_command.at(2);
-
-    if (!nh_param_.getParam(nodename + "/roll_limit",roll_limit_))
-    {
-        std::cout<<"[Error] Please set [roll_limit] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/pitch_limit",pitch_limit_))
-    {
-        std::cout<<"[Error] Please set [pitch_limit] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/yaw_rate_limit",yaw_rate_limit_))
-    {
-        std::cout<<"[Error] Please set [yaw_rate_limit] parameter"<<std::endl;
-        return false;
-    }
-    yaw_rate_limit_ = yaw_rate_limit_ / 180 * M_PI;
-
-    if (!nh_param_.getParam(nodename + "/thrust_min",thrust_min_))
-    {
-        std::cout<<"[Error] Please set [thrust_min] parameter"<<std::endl;
-        return false;
-    }
-    if (!nh_param_.getParam(nodename + "/thrust_max",thrust_max_))
-    {
-        std::cout<<"[Error] Please set [thrust_max] parameter"<<std::endl;
-        return false;
-    }
-
-    if (!nh_param_.getParam(nodename + "/k_yaw",k_yaw_))
-    {
-        std::cout<<"[Error] Please set [k_yaw] parameter"<<std::endl;
-        return false;
-    }
 
     for (int i = 0; i < ACADO_N + 1; i++) {
     acado_online_data_.block(i, 0, 1, ACADO_NOD) << roll_time_constant_, roll_gain_, pitch_time_constant_, pitch_gain_, drag_coefficients_(
@@ -187,13 +50,153 @@ namespace mympc {
       acadoVariables.ubValues[3 * i] = roll_limit_ / 180 * M_PI;        // max roll
       acadoVariables.ubValues[3 * i + 1] = pitch_limit_ / 180 * M_PI;   // max pitch
       acadoVariables.ubValues[3 * i + 2] = thrust_max_;    // max thrust
-    }   
+    }
+
+
+    received_first_odometry_ = false;
+    received_trajectory_ = false;
+    finished_trajectory_ = false;
+    
+    std::cout<<"[catching_mpc.cc] initialization is done"<<std::endl;
+  }
+
+  bool ModelPredictiveController::setControllerParameters()
+  {
+    std::cout<<"reading parameter"<<std::endl;
+
+    std::string nodename = "/scout/catching_mpc_controller";
+    std::vector<double> drag_coefficients;
+    std::vector<double> r_command;
+    double q_position_x,q_position_y,q_position_z;
+    double q_velocity_x,q_velocity_y,q_velocity_z;
+    double q_attitude_pos, q_attitude_vel;
+    if (!nh_param_.getParam(nodename + "/mass",mass_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [mass] parameter"<<std::endl;
+        return false;
+    }
+
+    if (!nh_param_.getParam(nodename + "/roll_time_constant",roll_time_constant_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [roll_time_constant] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/pitch_time_constant",pitch_time_constant_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [pitch_time_constant] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/roll_gain",roll_gain_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [roll_gain] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/pitch_gain",pitch_gain_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [pitch_gain] parameter"<<std::endl;
+        return false;
+    }
+
+    if (!nh_param_.getParam(nodename + "/drag_coefficients",drag_coefficients))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [drag_coefficients] parameter"<<std::endl;
+        return false;
+    }
+    drag_coefficients_ << drag_coefficients.at(0),drag_coefficients.at(1),drag_coefficients.at(2);
+
+    if (!nh_param_.getParam(nodename + "/q_position_x",q_position_x))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_position_x] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/q_position_y",q_position_y))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_position_Y] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/q_position_z",q_position_z))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_position_z] parameter"<<std::endl;
+        return false;
+    }
+    q_position_ << q_position_x,q_position_y,q_position_z;
+
+    if (!nh_param_.getParam(nodename + "/q_velocity_x",q_velocity_x))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_velocity_x] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/q_velocity_y",q_velocity_y))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_velocity_Y] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/q_velocity_z",q_velocity_z))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_velocity_z] parameter"<<std::endl;
+        return false;
+    }
+    q_velocity_ << q_velocity_x,q_velocity_y,q_velocity_z;
+
+    if (!nh_param_.getParam(nodename + "/q_attitude_pos",q_attitude_pos))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_attitude_pos] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/q_attitude_vel",q_attitude_vel))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [q_attitude_vel] parameter"<<std::endl;
+        return false;
+    }
+    q_attitude_ << q_attitude_pos,q_attitude_vel;
+    
+    if (!nh_param_.getParam(nodename + "/r_command",r_command))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [r_command] parameter"<<std::endl;
+        return false;
+    }
+    r_command_ << r_command.at(0), r_command.at(1),r_command.at(2);
+
+    if (!nh_param_.getParam(nodename + "/roll_limit",roll_limit_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [roll_limit] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/pitch_limit",pitch_limit_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [pitch_limit] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/yaw_rate_limit",yaw_rate_limit_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [yaw_rate_limit] parameter"<<std::endl;
+        return false;
+    }
+    yaw_rate_limit_ = yaw_rate_limit_ / 180 * M_PI;
+
+    if (!nh_param_.getParam(nodename + "/thrust_min",thrust_min_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [thrust_min] parameter"<<std::endl;
+        return false;
+    }
+    if (!nh_param_.getParam(nodename + "/thrust_max",thrust_max_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [thrust_max] parameter"<<std::endl;
+        return false;
+    }
+
+    if (!nh_param_.getParam(nodename + "/k_yaw",k_yaw_))
+    {
+        std::cout<<"catching_mpc : [Error] Please set [k_yaw] parameter"<<std::endl;
+        return false;
+    }
+   
     return true;
   }
 
   void ModelPredictiveController::setGoal(const geometry_msgs::PoseStamped& pose)
   {
-    position_ref_(0) = pose.pose.position.x;
+    position_ref_(0) = pose.pose.position.x + 0.3;
     position_ref_(1) = pose.pose.position.y;
     position_ref_(2) = pose.pose.position.z;
 
@@ -208,15 +211,27 @@ namespace mympc {
     1.0 - 2.0 * (pose.pose.orientation.y * pose.pose.orientation.y + pose.pose.orientation.z * pose.pose.orientation.z) );
 
 
-  // set reference matrices
-  for (size_t i = 0; i < ACADO_N; i++) {
-    reference_.block(i, 0, 1, ACADO_NY) << position_ref_[0], position_ref_[1], position_ref_[2],
-                                           velocity_ref_[0], velocity_ref_[1], velocity_ref_[2],
-                                           0, 0, 0, 0, 0;
+    // set velocity
+    double x_dist = position_ref_(0) - odometry_.pose.pose.position.x;
+    double y_dist = position_ref_(1) - odometry_.pose.pose.position.y;
+    double z_dist = position_ref_(2) - odometry_.pose.pose.position.z;
+
+    double terminal_velocity = 1.0;
+    double normalize_factor = terminal_velocity / sqrt(pow(x_dist,2)+pow(y_dist,2)+pow(z_dist,2)) ;
+    double vx_ref = x_dist / normalize_factor;
+    double vy_ref = y_dist / normalize_factor;
+    double vz_ref = z_dist / normalize_factor;
+    // set reference matrices
+    for (size_t i = 0; i < ACADO_N; i++) {
+      reference_.block(i, 0, 1, ACADO_NY) << position_ref_[0], position_ref_[1], position_ref_[2],
+                                             vx_ref, vy_ref, vz_ref,
+                                            //  velocity_ref_[0], velocity_ref_[1], velocity_ref_[2],
+                                             0, 0, 0, 0, 0;
   }
 
   referenceN_ << position_ref_[0], position_ref_[1], position_ref_[2],
-                 velocity_ref_[0], velocity_ref_[1], velocity_ref_[2];
+                 vx_ref, vy_ref, vz_ref;
+                //  velocity_ref_[0], velocity_ref_[1], velocity_ref_[2];
   }
 
   void ModelPredictiveController::setTrajectory(const trajectory_msgs::MultiDOFJointTrajectory& trajectory)
@@ -229,108 +244,9 @@ namespace mympc {
       trajectory_ref_ = trajectory;
       trajectory_ref_index_ = 0;
       std::cout<<"set new trajectory!"<<std::endl;
-      
-      setPointsFromTrajectory();
     }
   }
-  void ModelPredictiveController::setPointsFromTrajectory()
-  {
-    // std::cout<<"select points!"<<std::endl;
-    int traj_size = trajectory_ref_.points.size();
-    // std::cout<<"traj size : "<<traj_size<<std::endl;
-    int last_point_index = 0;
 
-    double reference_pose_x,reference_pose_y,reference_pose_z;
-    double reference_velocity_x,reference_velocity_y,reference_velocity_z;
-    double reference_acceleration_x,reference_acceleration_y,reference_acceleration_z;
-
-    double last_pose_x,last_pose_y,last_pose_z;
-    double last_velocity_x,last_velocity_y,last_velocity_z;
-
-
-    int path_index = 0;
-    int path_look_ahead = 0;
-
-    // set reference matrices
-    for (size_t i = 0; i < ACADO_N; i++)
-    {
-      if (trajectory_ref_index_ + 10*(i+path_look_ahead) < traj_size)
-      {path_index = trajectory_ref_index_ + 10*(i+path_look_ahead);}
-      else
-      {path_index = traj_size - 1;}
-
-      reference_pose_x = trajectory_ref_.points.at(path_index).transforms.at(0).translation.x;
-      reference_pose_y = trajectory_ref_.points.at(path_index).transforms.at(0).translation.y;
-      reference_pose_z = trajectory_ref_.points.at(path_index).transforms.at(0).translation.z;
-
-      reference_velocity_x = trajectory_ref_.points.at(path_index).velocities.at(0).linear.x;
-      reference_velocity_y = trajectory_ref_.points.at(path_index).velocities.at(0).linear.y;
-      reference_velocity_z = trajectory_ref_.points.at(path_index).velocities.at(0).linear.z;
-
-      reference_acceleration_x = trajectory_ref_.points.at(path_index).accelerations.at(0).linear.x;
-      reference_acceleration_y = trajectory_ref_.points.at(path_index).accelerations.at(0).linear.y;
-
-      reference_.block(i, 0, 1, ACADO_NY) << reference_pose_x,reference_pose_y,reference_pose_z,
-                                          reference_velocity_x,reference_velocity_y,reference_velocity_z,
-                                          -reference_acceleration_y / kGravity, reference_acceleration_x / kGravity,
-                                          -reference_acceleration_y / kGravity, reference_acceleration_x / kGravity,
-                                          0;
-      // set yaw direction!
-      // if (i==0)
-      // {
-      //   Eigen::Quaterniond q;
-      //   q.x() = trajectory_ref_.points.at(path_index).transforms.at(0).rotation.x;
-      //   q.y() = trajectory_ref_.points.at(path_index).transforms.at(0).rotation.y;
-      //   q.z() = trajectory_ref_.points.at(path_index).transforms.at(0).rotation.z;
-      //   q.w() = trajectory_ref_.points.at(path_index).transforms.at(0).rotation.w;
-
-      //   yaw_ref_ = std::atan2(2.0 * ( q.w() * q.z() + q.x() * q.y()),
-      //     1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()) );
-      // }
-    }
-
-    // set N reference.
-
-      // reference_.block(i, 0, 1, ACADO_NY) << reference_pose_x,reference_pose_y,reference_pose_z,
-      //                                       reference_velocity_x,reference_velocity_y,reference_velocity_z,
-      //                                       0,0,
-      //                                       0,0,
-      //                                       0;
-
-
-      // std::cout<<"x : "<<reference_pose_x<<", y : "<<reference_pose_y<<", z : "<<reference_pose_z<<std::endl;
-      // std::cout<<"vx : "<<reference_velocity_x<<", vy : "<<reference_velocity_y<<", vz : "<<reference_velocity_z<<std::endl;
-    
-    // set last reference
-    if (trajectory_ref_index_ + 10*ACADO_N < traj_size - 1)
-    { last_point_index = trajectory_ref_index_ + 10*ACADO_N; }
-    else
-    { last_point_index = traj_size-1 ;}
-    // last_point_index = traj_size-1 ;
-    last_pose_x = trajectory_ref_.points.at(last_point_index).transforms.at(0).translation.x;
-    last_pose_y = trajectory_ref_.points.at(last_point_index).transforms.at(0).translation.y;
-    last_pose_z = trajectory_ref_.points.at(last_point_index).transforms.at(0).translation.z;
-
-    last_velocity_x = trajectory_ref_.points.at(last_point_index).velocities.at(0).linear.x;
-    last_velocity_y = trajectory_ref_.points.at(last_point_index).velocities.at(0).linear.y;
-    last_velocity_z = trajectory_ref_.points.at(last_point_index).velocities.at(0).linear.z;
-    referenceN_ << last_pose_x,last_pose_y,last_pose_z,
-                    last_velocity_x,last_velocity_y,last_velocity_z;
-
-  
-
-    // set yaw direction!
-    int direction_point_index = traj_size -1;
-    Eigen::Quaterniond q;
-    q.x() = trajectory_ref_.points.at(direction_point_index).transforms.at(0).rotation.x;
-    q.y() = trajectory_ref_.points.at(direction_point_index).transforms.at(0).rotation.y;
-    q.z() = trajectory_ref_.points.at(direction_point_index).transforms.at(0).rotation.z;
-    q.w() = trajectory_ref_.points.at(direction_point_index).transforms.at(0).rotation.w;
-
-    yaw_ref_ = std::atan2(2.0 * ( q.w() * q.z() + q.x() * q.y()),
-      1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()) );
-
-  }  
   
 
     // rpy[0] = std::atan2(2.0 * (q.w() * q.x() + q.y() * q.z()),
@@ -413,7 +329,7 @@ namespace mympc {
       
 
 
-      setPointsFromTrajectory();
+      // setPointsFromTrajectory();
     }
     
     // this is for first odom
@@ -529,6 +445,21 @@ namespace mympc {
   Eigen::Map<Eigen::Matrix<double, ACADO_NOD, ACADO_N + 1>>(const_cast<double*>(acadoVariables.od)) =
       acado_online_data_.transpose();
 
+  //give initial value to input
+  // to make solver find better sol.
+
+
+
+  // double desired_angle = 
+  // cout<<"input size : "<<input_.size()<<endl;
+  for (int i = 0; i < ACADO_N; i++)
+  { input_.block(i, 0, 1, ACADO_NU) << 0, 10 / 180 * M_PI, 25;  }
+
+  Eigen::Map<Eigen::Matrix<double, ACADO_NU, ACADO_N>>(const_cast<double*>(acadoVariables.u)) =
+        input_.transpose();
+
+
+
   // Solve
   // Calculate the Optimization Problem!
   ros::Time time_start = ros::Time::now();
@@ -590,7 +521,8 @@ namespace mympc {
   // *ref_attitude_thrust = Eigen::Vector4d(roll_ref, pitch_ref, yaw_cmd, mass_ * thrust_ref);
 
   //this part is only for real flight!
-  if(received_trajectory_)
+  // if(received_trajectory_)
+  if(true)
   {
     *ref_attitude_thrust = Eigen::Vector4d(roll_ref_rot, pitch_ref_rot, yaw_cmd, mass_ * thrust_ref);
   }
@@ -601,17 +533,19 @@ namespace mympc {
   static int counter = 0;
   if (counter >= 10) {
     std::cout<<"============================================"<<std::endl;
-    std::cout<<"[mympc.cc] reference info"<<std::endl;
+    std::cout<<"[catching_mpc.cc] reference info"<<std::endl;
     std::cout<<"acado solver status : " << acado_status<<std::endl;
     std::cout<<"time consumed : "<<(time_end - time_start).toSec() * 1000.0<<" ms"<<std::endl;
-    std::cout<<"current trajectory index : "<<trajectory_ref_index_<<std::endl;
-    std::cout<<"number of points in trajectory : "<<trajectory_ref_.points.size()<<std::endl;
-    std::cout<<
+    // std::cout<<"current trajectory index : "<<trajectory_ref_index_<<std::endl;
+    // std::cout<<"number of points in trajectory : "<<trajectory_ref_.points.size()<<std::endl;
+    std::cout<<"thrust ref : \t"    << (*ref_attitude_thrust)[3] << std::endl;
     
-    // "yaw ref : \t"       << (*ref_attitude_thrust)[2] << std::endl<<
-    "thrust ref : \t"    << (*ref_attitude_thrust)[3] << std::endl;
+    // std::cout<<"============================================"<<std::endl;
+
+
+
+
     
-    std::cout<<"============================================"<<std::endl;
     // std::cout<<
     // "Current Roll : "    << euler_angles(0) * 180 / M_PI << std::endl <<
     // "Current Pitch : "    << euler_angles(1) * 180 / M_PI << std::endl <<
