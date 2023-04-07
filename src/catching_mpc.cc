@@ -224,14 +224,14 @@ namespace catching_mpc {
     // set reference matrices
     for (size_t i = 0; i < ACADO_N; i++) {
       reference_.block(i, 0, 1, ACADO_NY) << position_ref_[0], position_ref_[1], position_ref_[2],
-                                             vx_ref, vy_ref, vz_ref,
-                                            //  velocity_ref_[0], velocity_ref_[1], velocity_ref_[2],
+                                            //  vx_ref, vy_ref, vz_ref,
+                                             velocity_ref_[0], velocity_ref_[1], velocity_ref_[2],
                                              0, 0, 0, 0, 0;
   }
 
   referenceN_ << position_ref_[0], position_ref_[1], position_ref_[2],
-                 vx_ref, vy_ref, vz_ref;
-                //  velocity_ref_[0], velocity_ref_[1], velocity_ref_[2];
+                //  vx_ref, vy_ref, vz_ref;
+                 velocity_ref_[0], velocity_ref_[1], velocity_ref_[2];
   }
 
   void ModelPredictiveController::setTrajectory(const trajectory_msgs::MultiDOFJointTrajectory& trajectory)
