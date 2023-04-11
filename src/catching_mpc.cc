@@ -200,6 +200,10 @@ namespace catching_mpc {
     position_ref_(1) = pose.pose.position.y;
     position_ref_(2) = pose.pose.position.z;
 
+    // position_ref_(0) = 0;
+    // position_ref_(1) = 0;
+    // position_ref_(2) = 1;
+
     // rpy[0] = std::atan2(2.0 * (q.w() * q.x() + q.y() * q.z()),
     //                         1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y()));
 

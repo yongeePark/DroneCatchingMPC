@@ -99,7 +99,7 @@ void ControllerNode::PublishCommand()
 
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-    marker.header.frame_id = "/map";
+    marker.header.frame_id = "map";
     marker.header.stamp = ros::Time::now();
 
     marker.pose.orientation.w =1.0;

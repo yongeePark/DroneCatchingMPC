@@ -2,8 +2,13 @@
 <launch>
   <arg name="robot_namespace" default="scout"/>
   <group ns="$(arg robot_namespace)">
+    <!-- Track -->
     <node name="catching_mpc_controller" pkg="drone_catching_mpc" type="catching_mpc_controller" respawn="false" clear_params="true" output="screen">
       <rosparam file="$(find drone_catching_mpc)/config/gazebo_test.yaml" />
+    </node>
+    <!-- Taregt -->
+    <node name="target_controller" pkg="drone_catching_mpc" type="target_controller" respawn="false" clear_params="true" output="screen">
+      <!-- <rosparam file="$(find drone_catching_mpc)/config/gazebo_test.yaml" /> -->
     </node>
   </group>
 
