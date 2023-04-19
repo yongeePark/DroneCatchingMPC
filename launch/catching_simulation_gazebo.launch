@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
+<!--
+  Author : Jaeyong Park
+  This is for the test in the simulation environment
+  It will run tracking mpc, along with target pid controller.
+ -->
 <launch>
   <arg name="robot_namespace" default="scout"/>
   <group ns="$(arg robot_namespace)">
